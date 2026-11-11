@@ -71,11 +71,11 @@ const CFG={
  BR:{hl:"hl=pt-BR&gl=BR&ceid=BR:pt-419",ui:{refresh:"↻ Atualizar",upd:"Atualizado às ",loading:"Carregando…",err:"Não foi possível carregar as notícias agora. Verifique sua conexão e toque em Atualizar.",ago:["agora","min","h","d"],top:"Destaque"},
   tabs:{top:"Principais",politics:"Política",sports:"Esportes",police:"Polícia"},
   q:{top:"",politics:"política Brasil",sports:"esportes futebol",police:"polícia"},
-  dept:[["Geral",""],["Polícia Federal","\"Polícia Federal\""],["Polícia Civil","\"Polícia Civil\""],["Polícia Militar","\"Polícia Militar\""],["PRF","\"Polícia Rodoviária Federal\""],["Guarda Municipal","\"Guarda Municipal\""],["Bombeiros","\"Corpo de Bombeiros\""]]},
+  sub:{"politics": [["Geral", ""], ["Senado", "Senado Federal"], ["Câmara", "Câmara dos Deputados"], ["Planalto", "Lula governo Planalto"], ["STF", "STF Supremo Tribunal Federal"], ["Eleições", "eleições 2026"], ["Partidos", "partidos políticos Brasil"], ["Economia", "economia governo federal"], ["Exterior", "Itamaraty relações exteriores"]], "sports": [["Geral", ""], ["Futebol", "futebol"], ["Brasileirão", "Brasileirão Série A"], ["Seleção", "Seleção Brasileira"], ["Libertadores", "Libertadores"], ["Copa do Brasil", "Copa do Brasil"], ["Vôlei", "vôlei"], ["Basquete", "basquete NBA"], ["Fórmula 1", "Fórmula 1"], ["Tênis", "tênis"], ["UFC / MMA", "UFC MMA"]], "police": [["Geral", ""], ["Polícia Federal", "\"Polícia Federal\""], ["Polícia Civil", "\"Polícia Civil\""], ["Polícia Militar", "\"Polícia Militar\""], ["PRF", "\"Polícia Rodoviária Federal\""], ["Guarda Municipal", "\"Guarda Municipal\""], ["Bombeiros", "\"Corpo de Bombeiros\""]]}},
  US:{hl:"hl=en-US&gl=US&ceid=US:en",ui:{refresh:"↻ Refresh",upd:"Updated ",loading:"Loading…",err:"Couldn't load the news right now. Check your connection and tap Refresh.",ago:["now","m","h","d"],top:"Top story"},
   tabs:{top:"Top Stories",politics:"Politics",sports:"Sports",police:"Police"},
   q:{top:"",politics:"US politics",sports:"sports",police:"police"},
-  dept:[["General",""],["FBI","FBI"],["NYPD","NYPD"],["LAPD","LAPD"],["DEA","DEA"],["Sheriff","sheriff's office"],["State Police","\"state police\""],["Highway Patrol","\"highway patrol\""]]}
+  sub:{"politics": [["General", ""], ["Senate", "US Senate"], ["House", "US House of Representatives"], ["White House", "White House"], ["Supreme Court", "Supreme Court"], ["Elections", "US elections"], ["Democrats", "Democratic Party"], ["Republicans", "Republican Party"], ["Foreign Policy", "US foreign policy"]], "sports": [["General", ""], ["NFL", "NFL"], ["NBA", "NBA"], ["MLB", "MLB"], ["NHL", "NHL"], ["Soccer", "MLS soccer"], ["College Football", "college football"], ["UFC / MMA", "UFC MMA"], ["Golf", "golf PGA"], ["Tennis", "tennis"], ["Formula 1", "Formula 1"]], "police": [["General", ""], ["FBI", "FBI"], ["NYPD", "NYPD"], ["LAPD", "LAPD"], ["DEA", "DEA"], ["Sheriff", "sheriff's office"], ["State Police", "\"state police\""], ["Highway Patrol", "\"highway patrol\""]]}}
 };
 let S=JSON.parse(localStorage.getItem("st2")||'{"c":"BR","t":"top","d":0}');
 const $=id=>document.getElementById(id);
@@ -91,16 +91,15 @@ function shell(){
  $("fBR").classList.toggle("on",S.c==="BR");$("fUS").classList.toggle("on",S.c==="US");
  document.documentElement.lang=S.c==="BR"?"pt-BR":"en";
  $("tabs").innerHTML=Object.keys(c.tabs).map(k=>`<button data-t="${k}" class="${S.t===k?"on":""}">${c.tabs[k]}</button>`).join("");
- const ch=$("chips");ch.hidden=S.t!=="police";
- if(S.t==="police")ch.innerHTML=c.dept.map((d,i)=>`<button data-d="${i}" class="${S.d===i?"on":""}">${d[0]}</button>`).join("");
+ const ch=$("chips");ch.hidden=S.t==="top";
+ if(S.t!=="top")ch.innerHTML=c.sub[S.t].map((d,i)=>`<button data-d="${i}" class="${S.d===i?"on":""}">${d[0]}</button>`).join("");
  $("ref").textContent=c.ui.refresh;
 }
 
 async function load(){
  shell();
  const c=CFG[S.c];
- let q=c.q[S.t];
- if(S.t==="police"&&c.dept[S.d][1])q=c.dept[S.d][1]+" "+(S.c==="BR"?"polícia":"police");
+ let q=S.t==="top"?"":(c.sub[S.t][S.d][1]||c.q[S.t]);
  const rss=S.t==="top"?"https://news.google.com/rss?"+c.hl:"https://news.google.com/rss/search?q="+encodeURIComponent(q+" when:2d")+"&"+c.hl;
  const url="https://api.rss2json.com/v1/api.json?rss_url="+encodeURIComponent(rss);
  const key="c:"+url;
@@ -122,7 +121,7 @@ async function load(){
 }
 
 function render(items,at){
- const c=CFG[S.c],u=c.ui,tag=c.tabs[S.t];
+ const c=CFG[S.c],u=c.ui,tag=S.t!=="top"&&S.d?c.sub[S.t][S.d][0]:c.tabs[S.t];
  const h=items[0];
  $("upd").textContent=u.upd+new Date(at).toLocaleTimeString([],{hour:"2-digit",minute:"2-digit"});
  let html=`<a class="hero" href="${esc(h.l)}" target="_blank" rel="noopener">
