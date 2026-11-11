@@ -1,0 +1,148 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Notícias">
+<meta name="theme-color" content="#000000">
+<link rel="apple-touch-icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 180 180'%3E%3Crect width='180' height='180' fill='%23bb1919'/%3E%3Ctext x='90' y='115' font-size='80' font-family='Arial' font-weight='900' fill='white' text-anchor='middle'%3ENEWS%3C/text%3E%3C/svg%3E">
+<title>Notícias</title>
+<style>
+:root{--bg:#fff;--fg:#141414;--mut:#6b6b6b;--line:#e6e6e6;--red:#bb1919;--bar:#000;--card:#f6f6f6}
+@media (prefers-color-scheme:dark){:root{--bg:#121212;--fg:#f2f2f2;--mut:#9a9a9a;--line:#2c2c2c;--card:#1c1c1c}}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{margin:0;background:var(--bg);color:var(--fg);font-family:-apple-system,"Helvetica Neue",Arial,sans-serif}
+header{position:sticky;top:0;z-index:5;background:var(--bar);padding:env(safe-area-inset-top,0) 12px 0}
+.top{display:flex;align-items:center;justify-content:space-between;height:52px}
+.logo{display:flex;gap:3px}
+.logo b{background:#fff;color:#000;font-weight:900;font-size:17px;padding:1px 6px;line-height:22px}
+.flags{display:flex;gap:8px}
+.flags button{font-size:22px;background:#222;border:2px solid transparent;border-radius:8px;padding:2px 8px;line-height:1.3}
+.flags button.on{border-color:#fff;background:#333}
+nav{display:flex;overflow-x:auto;scrollbar-width:none;background:var(--bg);border-bottom:1px solid var(--line);margin:0 -12px;padding:0 12px}
+nav::-webkit-scrollbar{display:none}
+nav button{flex:none;background:none;border:0;border-bottom:4px solid transparent;color:var(--fg);font-size:15px;font-weight:700;padding:13px 14px 9px}
+nav button.on{border-bottom-color:var(--red)}
+.chips{display:flex;gap:8px;overflow-x:auto;padding:12px 16px 4px;scrollbar-width:none}
+.chips::-webkit-scrollbar{display:none}
+.chips button{flex:none;border:1px solid var(--line);background:var(--card);color:var(--fg);border-radius:999px;padding:7px 14px;font-size:13px;font-weight:600}
+.chips button.on{background:var(--fg);color:var(--bg)}
+main{max-width:680px;margin:0 auto;padding-bottom:calc(30px + env(safe-area-inset-bottom,0))}
+.bar{display:flex;justify-content:space-between;align-items:center;padding:12px 16px 0;color:var(--mut);font-size:12px}
+.bar button{background:none;border:0;color:var(--red);font-weight:700;font-size:13px}
+.hero{display:block;text-decoration:none;color:inherit;padding:12px 0 0}
+.hero .img{height:210px;background:linear-gradient(135deg,var(--red),#1a1a1a);display:flex;align-items:flex-end;padding:14px}
+.hero .img span{color:#fff;font-size:13px;font-weight:700;letter-spacing:.5px;text-transform:uppercase;opacity:.9}
+.hero h2{font-size:25px;line-height:1.15;margin:12px 16px 6px;font-weight:800}
+.hero p{margin:0 16px;color:var(--mut);font-size:15px;line-height:1.35}
+.meta{display:flex;gap:8px;align-items:center;margin:8px 16px 0;font-size:12px;color:var(--mut)}
+.tag{color:var(--red);font-weight:800;text-transform:uppercase}
+.item{display:block;text-decoration:none;color:inherit;margin:0 16px;padding:14px 0;border-top:1px solid var(--line)}
+.item h3{font-size:17px;line-height:1.25;margin:0;font-weight:700}
+.item .meta{margin:6px 0 0}
+.state{padding:40px 24px;text-align:center;color:var(--mut);line-height:1.5}
+.sk{height:16px;margin:16px;background:var(--card);border-radius:4px;animation:p 1.2s infinite}
+@keyframes p{50%{opacity:.4}}
+</style>
+</head>
+<body>
+<header>
+  <div class="top">
+    <div class="logo"><b>N</b><b>E</b><b>W</b><b>S</b></div>
+    <div class="flags">
+      <button id="fBR" aria-label="Brasil">🇧🇷</button>
+      <button id="fUS" aria-label="United States">🇺🇸</button>
+    </div>
+  </div>
+  <nav id="tabs"></nav>
+</header>
+<div class="chips" id="chips" hidden></div>
+<main>
+  <div class="bar"><span id="upd"></span><button id="ref"></button></div>
+  <div id="feed"></div>
+</main>
+
+<script>
+const CFG={
+ BR:{hl:"hl=pt-BR&gl=BR&ceid=BR:pt-419",ui:{refresh:"↻ Atualizar",upd:"Atualizado às ",loading:"Carregando…",err:"Não foi possível carregar as notícias agora. Verifique sua conexão e toque em Atualizar.",ago:["agora","min","h","d"],top:"Destaque"},
+  tabs:{politics:"Política",sports:"Esportes",police:"Polícia"},
+  q:{politics:"política Brasil",sports:"esportes futebol",police:"polícia"},
+  dept:[["Geral",""],["Polícia Federal","\"Polícia Federal\""],["Polícia Civil","\"Polícia Civil\""],["Polícia Militar","\"Polícia Militar\""],["PRF","\"Polícia Rodoviária Federal\""],["Guarda Municipal","\"Guarda Municipal\""],["Bombeiros","\"Corpo de Bombeiros\""]]},
+ US:{hl:"hl=en-US&gl=US&ceid=US:en",ui:{refresh:"↻ Refresh",upd:"Updated ",loading:"Loading…",err:"Couldn't load the news right now. Check your connection and tap Refresh.",ago:["now","m","h","d"],top:"Top story"},
+  tabs:{politics:"Politics",sports:"Sports",police:"Police"},
+  q:{politics:"US politics",sports:"sports",police:"police"},
+  dept:[["General",""],["FBI","FBI"],["NYPD","NYPD"],["LAPD","LAPD"],["DEA","DEA"],["Sheriff","sheriff's office"],["State Police","\"state police\""],["Highway Patrol","\"highway patrol\""]]}
+};
+let S=JSON.parse(localStorage.getItem("st")||'{"c":"BR","t":"politics","d":0}');
+const $=id=>document.getElementById(id);
+const save=()=>localStorage.setItem("st",JSON.stringify(S));
+const esc=s=>String(s||"").replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+const strip=h=>{const d=document.createElement("div");d.innerHTML=h||"";return d.textContent.trim()};
+
+function ago(date,u){const m=(Date.now()-new Date(date.replace(" ","T")+(/Z|[+-]\d\d:?\d\d$/.test(date)?"":"Z")))/6e4;
+ if(isNaN(m))return"";if(m<2)return u[0];if(m<60)return Math.round(m)+u[1];if(m<1440)return Math.round(m/60)+u[2];return Math.round(m/1440)+u[3]}
+
+function shell(){
+ const c=CFG[S.c];
+ $("fBR").classList.toggle("on",S.c==="BR");$("fUS").classList.toggle("on",S.c==="US");
+ document.documentElement.lang=S.c==="BR"?"pt-BR":"en";
+ $("tabs").innerHTML=Object.keys(c.tabs).map(k=>`<button data-t="${k}" class="${S.t===k?"on":""}">${c.tabs[k]}</button>`).join("");
+ const ch=$("chips");ch.hidden=S.t!=="police";
+ if(S.t==="police")ch.innerHTML=c.dept.map((d,i)=>`<button data-d="${i}" class="${S.d===i?"on":""}">${d[0]}</button>`).join("");
+ $("ref").textContent=c.ui.refresh;
+}
+
+async function load(){
+ shell();
+ const c=CFG[S.c];
+ let q=c.q[S.t];
+ if(S.t==="police"&&c.dept[S.d][1])q=c.dept[S.d][1]+" "+(S.c==="BR"?"polícia":"police");
+ const rss="https://news.google.com/rss/search?q="+encodeURIComponent(q+" when:2d")+"&"+c.hl;
+ const url="https://api.rss2json.com/v1/api.json?rss_url="+encodeURIComponent(rss);
+ const key="c:"+url;
+ $("feed").innerHTML='<div class="sk"></div><div class="sk"></div><div class="sk"></div><div class="sk"></div>';
+ try{
+  const r=await fetch(url,{cache:"no-store"});
+  const j=await r.json();
+  if(j.status!=="ok"||!j.items.length)throw 0;
+  const items=j.items.map(i=>{
+   const p=i.title.lastIndexOf(" - ");
+   return{t:p>0?i.title.slice(0,p):i.title,s:p>0?i.title.slice(p+3):"",l:i.link,d:i.pubDate}});
+  try{localStorage.setItem(key,JSON.stringify({items,at:Date.now()}))}catch(e){}
+  render(items,Date.now());
+ }catch(e){
+  const cached=JSON.parse(localStorage.getItem(key)||"null");
+  if(cached)render(cached.items,cached.at);
+  else $("feed").innerHTML=`<div class="state">${c.ui.err}</div>`;
+ }
+}
+
+function render(items,at){
+ const c=CFG[S.c],u=c.ui,tag=c.tabs[S.t];
+ const h=items[0];
+ $("upd").textContent=u.upd+new Date(at).toLocaleTimeString([],{hour:"2-digit",minute:"2-digit"});
+ let html=`<a class="hero" href="${esc(h.l)}" target="_blank" rel="noopener">
+  <div class="img"><span>${u.top} · ${esc(h.s)}</span></div>
+  <h2>${esc(h.t)}</h2>
+  <div class="meta"><span class="tag">${tag}</span><span>${ago(h.d,u.ago)}</span></div></a>`;
+ html+=items.slice(1).map(i=>`<a class="item" href="${esc(i.l)}" target="_blank" rel="noopener">
+  <h3>${esc(i.t)}</h3>
+  <div class="meta"><span class="tag">${tag}</span><span>${esc(i.s)}</span><span>· ${ago(i.d,u.ago)}</span></div></a>`).join("");
+ $("feed").innerHTML=html;
+ window.scrollTo(0,0);
+}
+
+$("fBR").onclick=()=>{S={c:"BR",t:S.t,d:0};save();load()};
+$("fUS").onclick=()=>{S={c:"US",t:S.t,d:0};save();load()};
+$("tabs").onclick=e=>{const b=e.target.closest("button");if(!b)return;S.t=b.dataset.t;S.d=0;save();load()};
+$("chips").onclick=e=>{const b=e.target.closest("button");if(!b)return;S.d=+b.dataset.d;save();load()};
+$("ref").onclick=load;
+setInterval(()=>{if(!document.hidden)load()},300000);
+document.addEventListener("visibilitychange",()=>{if(!document.hidden)load()});
+load();
+</script>
+</body>
+</html>
